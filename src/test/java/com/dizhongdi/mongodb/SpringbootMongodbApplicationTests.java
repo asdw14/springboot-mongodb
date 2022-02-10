@@ -1,11 +1,13 @@
 package com.dizhongdi.mongodb;
 
 import com.dizhongdi.mongodb.entity.User;
+import com.dizhongdi.mongodb.repository.UserRepository;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -28,7 +30,7 @@ class SpringbootMongodbApplicationTests {
         user.setAge(13);
         user.setEmail("275506393@qq.com");
         user.setName("zhangsan");
-        mongoTemplate.insert(user);
+//        mongoTemplate.insert(user);
 //        查所有
         List<User> all = mongoTemplate.findAll(User.class);
         System.out.println(all);
@@ -104,6 +106,85 @@ class SpringbootMongodbApplicationTests {
         long count = remove.getDeletedCount();
         System.out.println(count);
     }
-    
+
+    @Autowired
+    UserRepository userRepository;
+    //添加
+    @Test
+    public void createUser() {
+        User user = new User().setEmail("133253354@163.com").setAge(15).setName("lisi");
+        User save = userRepository.save(user);
+        System.out.println(save);
+    }
+    //查询所有
+    @Test
+    public void findUser() {
+        List<User> users = userRepository.findAll();
+        System.out.println(users);
+
+    }
+
+    //id查询
+    @Test
+    public void getById2() {
+        User user = userRepository.findById("620543587cc1e4760a5518e3").get();
+        System.out.println(user);
+    }
+    //条件查询
+    @Test
+    public void findUserList2() {
+        User user = new User().setName("zhangsan");
+        Example<User> example = Example.of(user);
+        List<User> all = userRepository.findAll(example);
+        System.out.println(all);
+
+    }
+
+    //模糊查询
+    @Test
+    public void findUsersLikeName2() {
+        User user = new User().setName("s");
+        //创建匹配器，即如何使用查询条件
+        ExampleMatcher matcher = ExampleMatcher.matching() //构建对象
+                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING) //改变默认字符串匹配方式：模糊查询
+                .withIgnoreCase(true); //改变默认大小写忽略方式：忽略大小写
+
+        Example<User> example = Example.of(user,matcher);
+        List<User> all = userRepository.findAll(example);
+        System.out.println(all);
+
+    }
+    //分页查询
+    @Test
+    public void findUsersPage2() {
+        Sort sort = Sort.by(Sort.Direction.DESC, "age");
+//0为第一页
+        Pageable pageable = PageRequest.of(0, 10, sort);
+//创建匹配器，即如何使用查询条件
+        ExampleMatcher matcher = ExampleMatcher.matching() //构建对象
+                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING) //改变默认字符串匹配方式：模糊查询
+                .withIgnoreCase(true); //改变默认大小写忽略方式：忽略大小写
+        User user = new User();
+        user.setName("三");
+        Example<User> userExample = Example.of(user, matcher);
+//创建实例
+        Example<User> example = Example.of(user, matcher);
+        Page<User> pages = userRepository.findAll(example, pageable);
+        System.out.println(pages);
+    }
+
+    //修改
+    @Test
+    public void updateUser2() {
+        User user = userRepository.findById("620545fd1b3e103f45cdc5a1").get();
+        user.setName("lisi修改");
+        User save = userRepository.save(user);
+        System.out.println(save);
+    }
+    //删除
+    @Test
+    public void delete2() {
+        userRepository.deleteById("620545fd1b3e103f45cdc5a1");
+    }
 
 }
